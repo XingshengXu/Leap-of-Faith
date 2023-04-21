@@ -33,13 +33,15 @@ class Hero(pg.sprite.Sprite):
         self.cutscene_played = False
         self.direction = "left"
         self.idle = True
+        self.fall = False
+        self.gravity = 0
 
         # Load Hero Appear Image
         self.hero_appear_img = load_image_sheets(
             HERO_APPEAR, CUTSCENE_WIDTH, CUTSCENE_HEIGHT, True)
         self.image = self.hero_appear_img[self.animation_count]
         self.rect = self.image.get_rect(
-            midbottom=(WIDTH // 2, HEIGHT + WALL_HEIGHT))
+            midbottom=(HERO_X, HERO_Y))
 
         # Load Hero Idle Image
         self.hero_idle_right_img = load_image_sheets(
@@ -51,23 +53,29 @@ class Hero(pg.sprite.Sprite):
             MASKDUDE_RUN, HERO_WIDTH, HERO_HEIGHT, True)
         self.hero_run_left_img = flip(self.hero_run_right_img)
 
+        # Load Hero Fall Image
+        self.hero_fall_right_img = load_image_sheets(
+            MASKDUDE_FALL, HERO_WIDTH, HERO_HEIGHT, True)
+        self.hero_fall_left_img = flip(self.hero_fall_right_img)
+
     def hero_appear(self):
         if self.animation_count >= len(self.hero_appear_img):
             self.animation_count = 0
             self.cutscene_played = True
             self.image = self.hero_idle_left_img[int(
                 self.animation_count)]
-            self.rect = self.image.get_rect(midbottom=(WIDTH // 2, HEIGHT))
+            self.rect = self.image.get_rect(
+                midbottom=(HERO_X, HERO_Y))
         else:
             self.image = self.hero_appear_img[int(self.animation_count)]
 
     def hero_run(self):
         key = pg.key.get_pressed()
-        if key[pg.K_LEFT]:
+        if key[pg.K_LEFT] and self.rect.left - MOVING_SPEED >= WALL_WIDTH:
             self.idle = False
             self.direction = 'left'
             self.rect.x -= MOVING_SPEED
-        elif key[pg.K_RIGHT]:
+        elif key[pg.K_RIGHT] and self.rect.right + MOVING_SPEED <= WIDTH - WALL_WIDTH:
             self.idle = False
             self.direction = 'right'
             self.rect.x += MOVING_SPEED
@@ -75,16 +83,29 @@ class Hero(pg.sprite.Sprite):
             self.idle = True
             self.animation_count = 0
 
+    def hero_fall(self):
+        if self.fall:
+            self.idle = False
+            self.gravity += 0.5
+            self.rect.y += self.gravity
+        else:
+            self.gravity = 0
+            self.idle = True
+
     def animation(self):
         img_list = {
             ('idle', 'left'): self.hero_idle_left_img,
             ('idle', 'right'): self.hero_idle_right_img,
             ('run', 'left'): self.hero_run_left_img,
             ('run', 'right'): self.hero_run_right_img,
+            ('fall', 'left'): self.hero_fall_left_img,
+            ('fall', 'right'): self.hero_fall_right_img,
         }
 
         if self.idle:
             state = 'idle'
+        elif self.fall:
+            state = 'fall'
         else:
             state = 'run'
         images = img_list[(state, self.direction)]
@@ -97,8 +118,30 @@ class Hero(pg.sprite.Sprite):
         if not self.cutscene_played:
             self.hero_appear()
         else:
+            self.hero_fall()
             self.hero_run()
             self.animation()
+
+
+class Terrain(pg.sprite.Sprite):
+    def __init__(self, terrainType, pos):
+        super().__init__()
+
+        # Load Terrain Image
+        self.image = pg.transform.scale(pg.image.load(
+            TERRAIN[terrainType]).convert(), (TERRAIN_WIDTH, TERRAIN_HEIGHT))
+        self.rect = self.image.get_rect(midtop=pos)
+
+    def terrain_move(self):
+        self.rect.y -= TERRAIN_SPEED
+
+    def destroy(self):
+        if self.rect.y <= -TERRAIN_HEIGHT:
+            self.kill()
+
+    def update(self):
+        self.terrain_move()
+        self.destroy()
 
 
 class Game:
@@ -121,11 +164,18 @@ class Game:
         self.wall = pg.transform.scale(pg.image.load(
             WALL).convert(), (WALL_WIDTH, WALL_HEIGHT))
 
+        # Set Event Timer
+        self.terrain_timer = TERRAIN_SPAWN
+        pg.time.set_timer(self.terrain_timer, TERRAIN_SPAWN_FREQ)
+
     def handle_events(self):
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 pg.quit()
                 exit()
+            if event.type == self.terrain_timer:
+                terrains.add(
+                    Terrain('common_tile', (WIDTH // 2 + 100, HEIGHT)))
 
     def draw_background(self):
         # Draw Background
@@ -154,6 +204,24 @@ class Game:
         if self.wall_offset <= -WALL_HEIGHT:
             self.wall_offset = 0
 
+    def collision(self, terrains):
+        for terrain in terrains:
+            if pg.sprite.collide_mask(hero.sprite, terrain):
+                # Check if hero hits the top of the terrain
+                if hero.sprite.rect.bottom <= terrain.rect.top + 5:
+                    hero.sprite.rect.bottom = terrain.rect.top
+                    hero.sprite.fall = False
+                # Check if hero hits the sides of the terrain
+                else:
+                    if hero.sprite.rect.left < terrain.rect.left:
+                        hero.sprite.rect.right = terrain.rect.left
+                    elif hero.sprite.rect.right > terrain.rect.right:
+                        hero.sprite.rect.left = terrain.rect.right
+                    hero.sprite.fall = True
+                break
+        else:
+            hero.sprite.fall = True
+
     def main_loop(self):
         while True:
             self.clock.tick(FPS)
@@ -165,16 +233,23 @@ class Game:
             # Display Game Backgrounds and Objects
             self.draw_background()
 
+            terrains.draw(self.screen)
             hero.draw(self.screen)
 
             # Update Sprites
+            terrains.update()
             hero.update()
 
+            if hero.sprite.cutscene_played:
+                self.collision(terrains)
             pg.display.update()
 
 
 # Create Class Instances and Add Sprites
 game = Game()
+
+terrains = pg.sprite.Group()
+terrains.add(Terrain('common_tile', (WIDTH // 2, HEIGHT)))
 
 hero = pg.sprite.GroupSingle()
 hero.add(Hero())

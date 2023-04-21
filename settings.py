@@ -11,17 +11,25 @@ WIDTH, HEIGHT = 800, 640  # Game Window Display Dimensions
 BG_WIDTH, BG_HEIGHT = 64, 64  # Background Tile Dimensions
 SAW_WIDTH, SAW_HEIGHT = 38, 38  # Saw Dimensions
 WALL_WIDTH, WALL_HEIGHT = 32, 64  # Wall Dimensions
+TERRAIN_WIDTH, TERRAIN_HEIGHT = 128, 32  # Terrain Dimensions
 # Cutscene of hero's appearing and disappearing Dimensions
 CUTSCENE_WIDTH, CUTSCENE_HEIGHT = 96, 96
+HERO_X, HERO_Y = WIDTH // 2, 500  # Hero Appear Position
 HERO_WIDTH, HERO_HEIGHT = 32, 32  # Hero Dimensions
 
-# FPS, Gravity, and Moving Speed
+# FPS, Number of Objects, Gravity, and Moving Speed
 FPS = 60
 NUM_SAW = 16
 NUM_WALL = 10
-TERRAIN_SPEED = 5
+TERRAIN_SPEED = 2
 SAW_SPEED = 3
-MOVING_SPEED = 5
+MOVING_SPEED = 6
+
+# Game Events
+TERRAIN_SPAWN = pg.USEREVENT + 1
+
+# Spawn Frequence and Delay Time
+TERRAIN_SPAWN_FREQ = 1000
 
 # Image Path
 BACKGROUND = 'assets/background/Blue.png'
@@ -34,3 +42,10 @@ PINKMAN_IDLE = 'assets/maincharacters/PinkMan/idle.png'
 MASKDUDE_RUN = 'assets/maincharacters/MaskDude/run.png'
 NINJAFROG_RUN = 'assets/maincharacters/NinjaFrog/run.png'
 PINKMAN_RUN = 'assets/maincharacters/PinkMan/run.png'
+MASKDUDE_FALL = 'assets/maincharacters/MaskDude/fall.png'
+NINJAFROG_FALL = 'assets/maincharacters/NinjaFrog/fall.png'
+PINKMAN_FALL = 'assets/maincharacters/PinkMan/fall.png'
+
+TERRAIN = {
+    'common_tile': 'assets/terrain/common_tile.png'
+}
