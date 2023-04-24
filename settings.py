@@ -8,8 +8,10 @@ These settings can be easily accessed and used throughout the game by importing 
 
 # Game Dimensions
 WIDTH, HEIGHT = 800, 640  # Game Window Display Dimensions
-GAMENAME_HEIGHT = HEIGHT // 5  # Game Name Height
+GAMENAME_HEIGHT = 100  # Game Name Height
+GAMESUBNAME_HEIGHT = 200  # Game Subname Height
 GAMEMESSAGE_HEIGHT = HEIGHT // 1.25  # Game Message Height
+SCOREMESSAGE_HEIGHT = HEIGHT//1.25  # Score Message Heigh
 BG_WIDTH, BG_HEIGHT = 64, 64  # Background Tile Dimensions
 SAW_WIDTH, SAW_HEIGHT = 38, 38  # Saw Dimensions
 WALL_WIDTH, WALL_HEIGHT = 32, 64  # Wall Dimensions
@@ -29,10 +31,12 @@ SAW_SPEED = 3
 MOVING_SPEED = 6
 FALL_SPEED = 6
 MAX_HEALTH = 3
+MAX_LEVEL = 100
 
 # Font
 LEVEL_FONT = pg.font.SysFont('comicsans', 50)
 TITLE_FONT = pg.font.SysFont('comicsans', 100)
+SUBTITLE_FONT = pg.font.SysFont('comicsans', 50)
 
 # Game Events
 TERRAIN_SPAWN = pg.USEREVENT + 1
@@ -44,6 +48,7 @@ DELAY_TIME = 3000
 
 # Image Path
 BACKGROUND = 'assets/background/Gray.png'
+TOWER_BG = 'assets/background/tower_BG.png'
 SAW = 'assets/traps/saw.png'
 WALL = 'assets/terrain/wall.png'
 HEARTFULL = 'assets/other/heartfull.png'

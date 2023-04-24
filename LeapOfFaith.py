@@ -87,8 +87,6 @@ class Hero(pg.sprite.Sprite):
             self.rect.x += MOVING_SPEED
         else:
             self.run = False
-            # if not self.hit:
-            #     self.animation_count = 0
 
     def hero_fall(self):
         if self.fall:
@@ -133,7 +131,6 @@ class Hero(pg.sprite.Sprite):
             self.hero_appear()
         else:
             self.hero_die()
-            self.hero_hit()
             self.hero_fall()
             self.hero_run()
             self.animation()
@@ -171,19 +168,24 @@ class Game:
         self.screen = pg.display.set_mode((WIDTH, HEIGHT))
         self.saw_index = 0
         self.frame_counter = 0
+        self.animation_count = 0
         self.saw_spacing = (WIDTH - WALL_WIDTH * 2 -
                             NUM_SAW * SAW_WIDTH) / (NUM_SAW - 1)
         self.wall_offset = 0
-        self.level = 0
+        self.level = 100
         self.fall_dist = 0
         self.hero_prevPos = HERO_Y
 
         # Load Game Name and Message
-        self.game_name = TITLE_FONT.render(
-            'Leap of Faith: The 100-Floor Trials', False, 'white')
-        self.game_name_rect = self.game_name.get_rect(
+        self. game_mainName = TITLE_FONT.render(
+            'Leap of Faith', False, 'white')
+        self. game_subName = SUBTITLE_FONT.render(
+            'The 100-Floor Trials', False, 'white')
+        self.game_mainName_rect = self.game_mainName.get_rect(
             center=(WIDTH // 2, GAMENAME_HEIGHT))
-        self.game_message = TITLE_FONT.render(
+        self.game_subName_rect = self.game_subName.get_rect(
+            center=(WIDTH // 2, GAMESUBNAME_HEIGHT))
+        self.game_message = SUBTITLE_FONT.render(
             'Press SPACE to play', False, 'white')
         self.game_message_rect = self.game_message.get_rect(
             center=(WIDTH // 2, GAMEMESSAGE_HEIGHT))
@@ -191,6 +193,8 @@ class Game:
 
         # Load Background Image
         self.background = pg.image.load(BACKGROUND).convert()
+        self.tower_BG = pg.transform.scale(
+            pg.image.load(TOWER_BG).convert(), (WIDTH, HEIGHT))
         self.saw = load_image_sheets(SAW, SAW_WIDTH, SAW_HEIGHT)
         self.wall = pg.transform.scale(pg.image.load(
             WALL).convert(), (WALL_WIDTH, WALL_HEIGHT))
@@ -212,24 +216,30 @@ class Game:
                 pg.quit()
                 exit()
 
-            if event.type == HERO_DIE:
-                pg.time.set_timer(TERRAIN_SPAWN, 0)
-                self.frame_counter = 0
-                self.level = 0
-                self.fall_dist = 0
-                self.hero_prevPos = HERO_Y
-                pg.time.delay(DELAY_TIME)
-                hero.empty()
-                terrains.empty()
-                hero.add(Hero())
-                pg.time.set_timer(TERRAIN_SPAWN, TERRAIN_SPAWN_FREQ)
-                terrains.add(Terrain('common_tile', (WIDTH // 2, HEIGHT)))
+            if self.game_active:
 
-            if event.type == TERRAIN_SPAWN:
-                terrain_type = choices(
-                    list(TERRAIN.keys()), TERRAIN_WEIGHTS)[0]
-                terrains.add(
-                    Terrain(terrain_type, (randint(WALL_WIDTH + TERRAIN_WIDTH // 2, WIDTH - WALL_WIDTH - TERRAIN_WIDTH // 2), HEIGHT)))
+                if event.type == HERO_DIE:
+                    pg.time.delay(DELAY_TIME)
+                    self.game_active = False
+
+                if event.type == TERRAIN_SPAWN:
+                    terrain_type = choices(
+                        list(TERRAIN.keys()), TERRAIN_WEIGHTS)[0]
+                    terrains.add(
+                        Terrain(terrain_type, (randint(WALL_WIDTH + TERRAIN_WIDTH // 2, WIDTH - WALL_WIDTH - TERRAIN_WIDTH // 2), HEIGHT)))
+            else:
+                if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
+                    # Reset Game Parameters and Timers
+                    self.game_active = True
+                    self.frame_counter = 0
+                    self.level = 100
+                    self.fall_dist = 0
+                    self.hero_prevPos = HERO_Y
+                    hero.empty()
+                    terrains.empty()
+                    hero.add(Hero())
+                    terrains.add(Terrain('common_tile', (WIDTH // 2, HEIGHT)))
+                    pg.time.set_timer(TERRAIN_SPAWN, TERRAIN_SPAWN_FREQ)
 
     def draw_background(self):
         # Draw Background
@@ -272,7 +282,7 @@ class Game:
 
     def display_level(self):
         display_offset = 50
-        self.level = self.fall_dist // HEIGHT
+        self.level = MAX_LEVEL - self.fall_dist // HEIGHT
         score_text = LEVEL_FONT.render(
             f'Level: {self.level}', False, 'white')
         score_rect = score_text.get_rect(right=WIDTH - display_offset)
@@ -328,26 +338,57 @@ class Game:
         while True:
             self.clock.tick(FPS)
             self.frame_counter += 1
+            self.animation_count += 0.2
 
             # Handle Events
             self.handle_events()
 
-            # Display Game Backgrounds and Objects
-            self.draw_background()
+            if self.game_active:
 
-            terrains.draw(self.screen)
-            hero.draw(self.screen)
+                # Display Game Backgrounds and Objects
+                self.draw_background()
 
-            # Update Sprites
-            terrains.update()
-            hero.update()
+                terrains.draw(self.screen)
+                hero.draw(self.screen)
 
-            if hero.sprite.cutscene_played:
-                self.collision(terrains)
-                self.cal_fallDist()
+                # Update Sprites
+                terrains.update()
+                hero.update()
 
-            self.display_level()
-            self.display_health()
+                if hero.sprite.cutscene_played:
+                    self.collision(terrains)
+                    self.cal_fallDist()
+
+                self.display_level()
+                self.display_health()
+
+            else:
+                # Generate Pre-game Screen
+
+                self.screen.blit(self.tower_BG, (0, 0))
+
+                # Display Heros
+                hero_images = hero.sprite.hero_idle_left_img
+                if self.animation_count >= len(hero_images):
+                    self.animation_count = 0
+                self.screen.blit(hero_images[int(self.animation_count)],
+                                 (200, HEIGHT // 2))
+
+                score_message = LEVEL_FONT.render(
+                    f'Your level: {self.level}', False, 'white')
+                score_message_rect = score_message.get_rect(
+                    center=(WIDTH // 2, SCOREMESSAGE_HEIGHT))
+                self.screen.blit(self.game_mainName, self.game_mainName_rect)
+                self.screen.blit(self.game_subName, self.game_subName_rect)
+
+                if self.level == 100:
+                    # Display the message for 30 frames and hide it for the next 30 frames
+                    if self.frame_counter % FPS < 30:
+                        self.screen.blit(self.game_message,
+                                         self.game_message_rect)
+                else:
+                    self.screen.blit(score_message, score_message_rect)
+
             pg.display.update()
 
 
