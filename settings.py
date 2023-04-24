@@ -37,13 +37,14 @@ MAX_LEVEL = 100
 LEVEL_FONT = pg.font.SysFont('comicsans', 50)
 TITLE_FONT = pg.font.SysFont('comicsans', 100)
 SUBTITLE_FONT = pg.font.SysFont('comicsans', 50)
+WIN_FONT = pg.font.SysFont('comicsans', 25)
 
 # Game Events
 TERRAIN_SPAWN = pg.USEREVENT + 1
 HERO_DIE = pg.USEREVENT + 2
 
 # Spawn Frequence and Delay Time
-TERRAIN_SPAWN_FREQ = 800
+TERRAIN_SPAWN_FREQ = 1000
 DELAY_TIME = 3000
 
 # Image Path
@@ -53,20 +54,29 @@ SAW = 'assets/traps/saw.png'
 WALL = 'assets/terrain/wall.png'
 HEARTFULL = 'assets/other/heartfull.png'
 HEARTEMPTY = 'assets/other/heartempty.png'
+HUD_NUMBER = ['assets/other/hud_1.png',
+              'assets/other/hud_2.png', 'assets/other/hud_3.png']
 HERO_APPEAR = 'assets/maincharacters/appearing.png'
-MASKDUDE_IDLE = 'assets/maincharacters/MaskDude/idle.png'
-NINJAFROG_IDLE = 'assets/maincharacters/NinjaFrog/idle.png'
-PINKMAN_IDLE = 'assets/maincharacters/PinkMan/idle.png'
-MASKDUDE_RUN = 'assets/maincharacters/MaskDude/run.png'
-NINJAFROG_RUN = 'assets/maincharacters/NinjaFrog/run.png'
-PINKMAN_RUN = 'assets/maincharacters/PinkMan/run.png'
-MASKDUDE_FALL = 'assets/maincharacters/MaskDude/fall.png'
-NINJAFROG_FALL = 'assets/maincharacters/NinjaFrog/fall.png'
-PINKMAN_FALL = 'assets/maincharacters/PinkMan/fall.png'
-MASKDUDE_HIT = 'assets/maincharacters/MaskDude/hit.png'
-NINJAFROG_HIT = 'assets/maincharacters/NinjaFrog/hit.png'
-PINKMAN_HIT = 'assets/maincharacters/PinkMan/hit.png'
-
+HERO_IDLE = {
+    'MaskDude': 'assets/maincharacters/MaskDude/idle.png',
+    'NinjaFrog': 'assets/maincharacters/NinjaFrog/idle.png',
+    'PinkMan':  'assets/maincharacters/PinkMan/idle.png',
+}
+HERO_RUN = {
+    'MaskDude': 'assets/maincharacters/MaskDude/run.png',
+    'NinjaFrog': 'assets/maincharacters/NinjaFrog/run.png',
+    'PinkMan':  'assets/maincharacters/PinkMan/run.png',
+}
+HERO_FALL = {
+    'MaskDude': 'assets/maincharacters/MaskDude/fall.png',
+    'NinjaFrog': 'assets/maincharacters/NinjaFrog/fall.png',
+    'PinkMan':  'assets/maincharacters/PinkMan/fall.png',
+}
+HERO_HIT = {
+    'MaskDude': 'assets/maincharacters/MaskDude/hit.png',
+    'NinjaFrog': 'assets/maincharacters/NinjaFrog/hit.png',
+    'PinkMan':  'assets/maincharacters/PinkMan/hit.png',
+}
 TERRAIN = {
     'common_tile': 'assets/terrain/common_tile.png',
     'spike_tile': 'assets/terrain/spike_tile.png',
@@ -77,3 +87,7 @@ TERRAIN_WEIGHTS = [50, 20, 30]
 # Sound Path
 HEAL_SOUND = 'assets/sound/heal.wav'
 STING_SOUND = 'assets/sound/sting.ogg'
+MASKDUDE_SOUND = 'assets/sound/maskdude.ogg'
+NINJAFROG_SOUND = 'assets/sound/ninjafrog.ogg'
+PINKMAN_SOUND = 'assets/sound/pinkman.ogg'
+BGM = 'assets/sound/Juhani Junkala.wav'
