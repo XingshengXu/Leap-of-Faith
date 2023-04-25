@@ -6,23 +6,8 @@ The settings module for the "Leap of Faith: The 100-Floor Trials" game. This mod
 These settings can be easily accessed and used throughout the game by importing the module into the main game file.
 """
 
-# Game Dimensions
-WIDTH, HEIGHT = 800, 640  # Game Window Display Dimensions
-GAMENAME_HEIGHT = 100  # Game Name Height
-GAMESUBNAME_HEIGHT = 200  # Game Subname Height
-GAMEMESSAGE_HEIGHT = HEIGHT // 1.25  # Game Message Height
-SCOREMESSAGE_HEIGHT = HEIGHT//1.25  # Score Message Heigh
-BG_WIDTH, BG_HEIGHT = 64, 64  # Background Tile Dimensions
-SAW_WIDTH, SAW_HEIGHT = 38, 38  # Saw Dimensions
-WALL_WIDTH, WALL_HEIGHT = 32, 64  # Wall Dimensions
-TERRAIN_WIDTH, TERRAIN_HEIGHT = 160, 32  # Terrain Dimensions
-# Cutscene of hero's appearing and disappearing Dimensions
-CUTSCENE_WIDTH, CUTSCENE_HEIGHT = 96, 96
-HERO_X, HERO_Y = WIDTH // 2, 500  # Hero Appear Position
-HERO_WIDTH, HERO_HEIGHT = 32, 32  # Hero Dimensions
-COLLISION_THRESHOLD = 10  # Collision Threshold
 
-# FPS, Number of Objects, Gravity, and Moving Speed
+# Game Play Settings
 FPS = 60
 NUM_SAW = 16
 NUM_WALL = 10
@@ -31,7 +16,33 @@ SAW_SPEED = 3
 MOVING_SPEED = 6
 FALL_SPEED = 6
 MAX_HEALTH = 3
-MAX_LEVEL = 100
+TOP_LEVEL = 100
+FRAME_INCREMENT = 1
+ANIMATION_INCREMENT = 0.2
+
+# Game Dimensions
+WIDTH, HEIGHT = 800, 640  # Game Window Display Dimensions
+GAMENAME_HEIGHT = 100  # Game Name Height
+GAMESUBNAME_HEIGHT = 200  # Game Subname Height
+GAMEMESSAGE_HEIGHT = HEIGHT // 1.25  # Game Message Height
+SCOREMESSAGE_HEIGHT = HEIGHT // 1.25  # Score Message Heigh
+BG_WIDTH, BG_HEIGHT = 64, 64  # Background Tile Dimensions
+WALL_WIDTH, WALL_HEIGHT = 32, 64  # Wall Dimensions
+SAW_WIDTH, SAW_HEIGHT = 38, 38  # Saw Dimensions
+SAW_SPACING = (WIDTH - WALL_WIDTH * 2 - NUM_SAW * SAW_WIDTH) / \
+    (NUM_SAW - 1)  # The Spacing Between Saws
+HEART_SPACING = 10  # The Spacing Between HEARTS
+LEVEL_DISPLAY_OFFSET = 50  # Level Display Offset
+TERRAIN_WIDTH, TERRAIN_HEIGHT = 160, 32  # Terrain Dimensions
+TERRAIN_SPAWNLEFT, TERRAIN_SPAWNRIGHT = WALL_WIDTH + \
+    TERRAIN_WIDTH // 2, WIDTH - WALL_WIDTH - TERRAIN_WIDTH // 2
+# Cutscene of hero's appearing and disappearing Dimensions
+CUTSCENE_WIDTH, CUTSCENE_HEIGHT = 96, 96
+HERO_X, HERO_Y = WIDTH // 2, 500  # Hero Appear Position
+HERO_WIDTH, HERO_HEIGHT = 32, 32  # Hero Dimensions
+HERO_SPACING = (WIDTH - 6 * HERO_WIDTH) // 4  # The Spacing Between Heroes
+HUD_NUMBER_OFFSET_X, HUD_NUMBER_OFFSET_Y = 20, 80
+COLLISION_THRESHOLD = 10  # Collision Threshold
 
 # Font
 LEVEL_FONT = pg.font.SysFont('comicsans', 50)
@@ -82,7 +93,7 @@ TERRAIN = {
     'spike_tile': 'assets/terrain/spike_tile.png',
     'heal_tile': 'assets/terrain/heal_tile1.png',
 }
-TERRAIN_WEIGHTS = [50, 20, 30]
+TERRAIN_SPAWN_WEIGHTS = [50, 20, 30]
 
 # Sound Path
 HEAL_SOUND = 'assets/sound/heal.wav'

@@ -1,5 +1,4 @@
-from os import listdir
-from random import choices, randint, random
+from random import choices, randint
 from sys import exit
 import pygame as pg
 from settings import *
@@ -17,13 +16,19 @@ def load_image_sheets(img_path, width, height, needScale=False):
 
     images = []
     for i in range(image_num):
-        surface = pg.Surface((width, height), pg.SRCALPHA, 32)
+        surface = pg.Surface((width, height), pg.SRCALPHA, depth=32)
         rect = pg.Rect(i * width, 0, width, height)
         surface.blit(image, (0, 0), rect)
         if needScale:
             surface = pg.transform.scale2x(surface)
         images.append(surface)
     return images
+
+
+def render_font(text, font, color, center):
+    rendered_text = font.render(text, True, color)
+    rendered_text_rect = rendered_text.get_rect(center=center)
+    return rendered_text, rendered_text_rect
 
 
 class Hero(pg.sprite.Sprite):
@@ -163,35 +168,41 @@ class Terrain(pg.sprite.Sprite):
 class Game:
 
     def __init__(self):
+        self.setup()
+        self.load_resources()
+
+    def setup(self):
         self.game_active = False
         self.clock = pg.time.Clock()
-        self.screen = pg.display.set_mode((WIDTH, HEIGHT))
         self.saw_index = 0
         self.frame_counter = 0
         self.animation_count = 0
-        self.saw_spacing = (WIDTH - WALL_WIDTH * 2 -
-                            NUM_SAW * SAW_WIDTH) / (NUM_SAW - 1)
         self.wall_offset = 0
-        self.level = 100
+        self.level = TOP_LEVEL
         self.fall_dist = 0
         self.hero_prevPos = HERO_Y
-
-        # Load Game Name and Message
-        self. game_mainName = TITLE_FONT.render(
-            'Leap of Faith', True, 'darkgoldenrod1')
-        self. game_subName = SUBTITLE_FONT.render(
-            'The 100-Floor Trials', True, 'darkgoldenrod1')
-        self.game_mainName_rect = self.game_mainName.get_rect(
-            center=(WIDTH // 2, GAMENAME_HEIGHT))
-        self.game_subName_rect = self.game_subName.get_rect(
-            center=(WIDTH // 2, GAMESUBNAME_HEIGHT))
-        self.game_message = SUBTITLE_FONT.render(
-            'Choose a hero to play!', True, 'red')
-        self.game_message_rect = self.game_message.get_rect(
-            center=(WIDTH // 2, GAMEMESSAGE_HEIGHT))
+        self.screen = pg.display.set_mode((WIDTH, HEIGHT))
         pg.display.set_caption('Leap of Faith: The 100-Floor Trials')
+        pg.time.set_timer(TERRAIN_SPAWN, TERRAIN_SPAWN_FREQ)
 
-        # Load Background Image
+    def load_resources(self):
+        self.load_fonts()
+        self.load_images()
+        self.load_sounds()
+
+    def load_fonts(self):
+        self.game_mainName, self.game_mainName_rect = render_font(
+            'Leap of Faith', TITLE_FONT, 'darkgoldenrod1', (WIDTH // 2, GAMENAME_HEIGHT))
+        self.game_subName, self.game_subName_rect = render_font(
+            'The 100-Floor Trials', SUBTITLE_FONT, 'darkgoldenrod1', (WIDTH // 2, GAMESUBNAME_HEIGHT))
+        self.game_message, self.game_message_rect = render_font(
+            'Choose a hero to play!', SUBTITLE_FONT, 'red', (WIDTH // 2, GAMEMESSAGE_HEIGHT))
+        self.win_message, self.win_message_rect = render_font(
+            "My hero, you've completed the leap of faith! Congratulations!", WIN_FONT, 'red', (WIDTH // 2, SCOREMESSAGE_HEIGHT))
+
+    def load_images(self):
+
+        # Load BackGround Images
         self.background = pg.image.load(BACKGROUND).convert()
         self.tower_BG = pg.transform.scale(
             pg.image.load(TOWER_BG).convert(), (WIDTH, HEIGHT))
@@ -199,35 +210,30 @@ class Game:
         self.wall = pg.transform.scale(pg.image.load(
             WALL).convert(), (WALL_WIDTH, WALL_HEIGHT))
 
+        # Load HUD
         self.hud_number = [pg.image.load(HUD_NUMBER[i]).convert_alpha()
                            for i in range(len(HUD_NUMBER))]
-        # Load Hero Idle Image
-        self.hero_initImgs = [load_image_sheets(HERO_IDLE[hero_name], HERO_WIDTH, HERO_HEIGHT, True)
+        self.hero_initImgs = [load_image_sheets(HERO_IDLE[hero_name],
+                                                HERO_WIDTH, HERO_HEIGHT, True)
                               for hero_name in ['MaskDude', 'NinjaFrog', 'PinkMan']]
-
-        # Load Health Image
         self.heart_full = pg.image.load(HEARTFULL).convert_alpha()
         self.heart_empty = pg.image.load(HEARTEMPTY).convert_alpha()
 
-        # Load Pre-Game Music
+    def load_sounds(self):
         pg.mixer.music.load(BGM)
         pg.mixer.music.play(loops=-1)
-
-        # Load Sound Effect
         self.heal_sound = pg.mixer.Sound(HEAL_SOUND)
         self.sting_sound = pg.mixer.Sound(STING_SOUND)
         self.maskdude_sound = pg.mixer.Sound(MASKDUDE_SOUND)
         self.ninjafrog_sound = pg.mixer.Sound(NINJAFROG_SOUND)
         self.pinkman_sound = pg.mixer.Sound(PINKMAN_SOUND)
 
-        # Set Event Timer
-        pg.time.set_timer(TERRAIN_SPAWN, TERRAIN_SPAWN_FREQ)
-
     def reset_game(self, hero_type):
-        # Reset Game Parameters and Timers
         self.game_active = True
         self.frame_counter = 0
-        self.level = 100
+        self.saw_index = 0
+        self.animation_count = 0
+        self.level = TOP_LEVEL
         self.fall_dist = 0
         self.hero_prevPos = HERO_Y
         hero.empty()
@@ -250,9 +256,10 @@ class Game:
 
                 if event.type == TERRAIN_SPAWN:
                     terrain_type = choices(
-                        list(TERRAIN.keys()), TERRAIN_WEIGHTS)[0]
+                        list(TERRAIN.keys()), TERRAIN_SPAWN_WEIGHTS)[0]
                     terrains.add(
-                        Terrain(terrain_type, (randint(WALL_WIDTH + TERRAIN_WIDTH // 2, WIDTH - WALL_WIDTH - TERRAIN_WIDTH // 2), HEIGHT)))
+                        Terrain(terrain_type, (randint(
+                            TERRAIN_SPAWNLEFT, TERRAIN_SPAWNRIGHT), HEIGHT)))
             else:
                 if event.type == pg.KEYDOWN:
                     hero_type = None
@@ -276,9 +283,9 @@ class Game:
 
         # Draw Saws
         for i in range(NUM_SAW):
-            x_pos = i * (self.saw_spacing + SAW_WIDTH)
-            self.screen.blit(
-                self.saw[self.saw_index], (x_pos + WALL_WIDTH, -SAW_HEIGHT // 2))
+            x_pos = i * (SAW_SPACING + SAW_WIDTH)
+            self.screen.blit(self.saw[self.saw_index],
+                             (x_pos + WALL_WIDTH, -SAW_HEIGHT // 2))
         if self.frame_counter % SAW_SPEED == 0:
             self.saw_index = (self.saw_index + 1) % len(self.saw)
 
@@ -296,11 +303,10 @@ class Game:
             self.wall_offset = 0
 
     def display_health(self):
-        heart_padding = 10  # Define the padding between hearts
         heart_y_pos = SAW_HEIGHT // 2
         for i in range(MAX_HEALTH - 1, -1, -1):
             heart_x_pos = (i + 1) * self.heart_full.get_width() + \
-                i * (heart_padding)
+                i * HEART_SPACING
 
             if i < hero.sprite.health:
                 self.screen.blit(self.heart_full, (heart_x_pos, heart_y_pos))
@@ -308,14 +314,51 @@ class Game:
                 self.screen.blit(self.heart_empty, (heart_x_pos, heart_y_pos))
 
     def display_level(self):
-        display_offset = 50
-        self.level = MAX_LEVEL - self.fall_dist // HEIGHT
+        LEVEL_DISPLAY_OFFSET
+        self.level = TOP_LEVEL - self.fall_dist // HEIGHT
         if self.level == 0:
             self.game_active = False
         score_text = LEVEL_FONT.render(
             f'Level: {self.level}', True, 'red')
-        score_rect = score_text.get_rect(right=WIDTH - display_offset)
+        score_rect = score_text.get_rect(right=WIDTH-LEVEL_DISPLAY_OFFSET)
         self.screen.blit(score_text, score_rect)
+
+    def display_pregame_hud(self):
+        for i in range(len(self.hero_initImgs)):
+            hero_img = self.hero_initImgs[i]
+            if self.animation_count >= len(hero_img):
+                self.animation_count = 0
+
+            x_position = HERO_SPACING + (HERO_WIDTH * 2 + HERO_SPACING) * i
+            y_position = HEIGHT // 2
+
+            # Draw Heroes
+            self.screen.blit(
+                hero_img[int(self.animation_count)], (x_position, y_position))
+            # Draw HUD Numbers
+            self.screen.blit(
+                self.hud_number[i], (x_position + HUD_NUMBER_OFFSET_X,
+                                     y_position + HUD_NUMBER_OFFSET_Y))
+
+    def display_pregame_messages(self):
+        # Display Game Main Title and Subtitle
+        self.screen.blit(self.game_mainName, self.game_mainName_rect)
+        self.screen.blit(self.game_subName, self.game_subName_rect)
+
+        # Display Game Start Message
+        if self.level == 100:
+            if self.frame_counter % FPS < 30:
+                self.screen.blit(self.game_message, self.game_message_rect)
+        # Display Winner Message
+        elif self.level == 0:
+            if self.frame_counter % FPS < 30:
+                self.screen.blit(self.win_message, self.win_message_rect)
+        # Display Level Score
+        else:
+            score_message, score_message_rect = render_font(
+                f'Your Final Level: {self.level}', LEVEL_FONT, 'red',
+                (WIDTH // 2, SCOREMESSAGE_HEIGHT))
+            self.screen.blit(score_message, score_message_rect)
 
     def cal_damage(self):
         hero.sprite.hit = True
@@ -345,9 +388,11 @@ class Game:
                 if hero.sprite.rect.bottom <= terrain.rect.top + COLLISION_THRESHOLD:
                     hero.sprite.rect.bottom = terrain.rect.top
                     hero.sprite.fall = False
+                    # If the terrain is a spike_tile and hasn't dealt damage yet, apply damage
                     if terrain.type == 'spike_tile' and not terrain.has_dealt_damage:
                         self.cal_damage()
                         terrain.has_dealt_damage = True
+                    # If the terrain is a heal_tile and hasn't healed yet, apply healing
                     elif terrain.type == 'heal_tile' and not terrain.has_dealt_heal:
                         self.cal_heal()
                         terrain.has_dealt_heal = True
@@ -360,80 +405,43 @@ class Game:
                     hero.sprite.fall = True
                 break
         else:
+            # If no collision was detected, set the hero's fall state to True
             hero.sprite.fall = True
 
     def main_loop(self):
         """This is the game main loop."""
         while True:
             self.clock.tick(FPS)
-            self.frame_counter += 1
-            self.animation_count += 0.2
+            self.frame_counter += FRAME_INCREMENT
+            self.animation_count += ANIMATION_INCREMENT
 
             # Handle Events
             self.handle_events()
 
             if self.game_active:
-
-                # Display Game Backgrounds and Objects
+                # Display Pregame Background
                 self.draw_background()
-
+                # Draw Sprites
                 terrains.draw(self.screen)
                 hero.draw(self.screen)
-
                 # Update Sprites
                 terrains.update()
                 hero.update()
 
+                # Perform Collision Detection and Calculate Falling Distance
                 if hero.sprite.cutscene_played:
                     self.collision(terrains)
                     self.cal_fallDist()
 
+                # Display HUD
                 self.display_level()
                 self.display_health()
-
             else:
                 # Generate Pre-game Screen
-
                 self.screen.blit(self.tower_BG, (0, 0))
-
                 # Display HUD
-                space = (WIDTH - 6 * HERO_WIDTH) // 4
-                for i in range(len(self.hero_initImgs)):
-                    hero_img = self.hero_initImgs[i]
-                    if self.animation_count >= len(hero_img):
-                        self.animation_count = 0
-
-                    # Calculate the x position for each image
-                    x_position = space + (HERO_WIDTH * 2 + space) * i
-                    y_position = HEIGHT // 2
-                    # Display Heros
-                    self.screen.blit(
-                        hero_img[int(self.animation_count)], (x_position, y_position))
-                    # Display HUD Numbers
-                    self.screen.blit(
-                        self.hud_number[i], (x_position + 20, y_position + 80))
-
-                score_message = LEVEL_FONT.render(
-                    f'Your Final Level: {self.level}', True, 'red')
-                score_message_rect = score_message.get_rect(
-                    center=(WIDTH // 2, SCOREMESSAGE_HEIGHT))
-                win_message = WIN_FONT.render(
-                    f"My hero, you've completed the leap of faith! Congratulations!", True, 'red')
-                win_message_rect = win_message.get_rect(
-                    center=(WIDTH // 2, SCOREMESSAGE_HEIGHT))
-                self.screen.blit(self.game_mainName, self.game_mainName_rect)
-                self.screen.blit(self.game_subName, self.game_subName_rect)
-
-                if self.level == 100:
-                    # Display the message for 30 frames and hide it for the next 30 frames
-                    if self.frame_counter % FPS < 30:
-                        self.screen.blit(self.game_message,
-                                         self.game_message_rect)
-                elif self.level == 0:
-                    if self.frame_counter % FPS < 30:
-                        self.screen.blit(win_message, win_message_rect)
-                else:
-                    self.screen.blit(score_message, score_message_rect)
+                self.display_pregame_hud()
+                self.display_pregame_messages()
 
             pg.display.update()
 
