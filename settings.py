@@ -13,6 +13,7 @@ NUM_SAW = 16
 NUM_WALL = 10
 TERRAIN_SPEED = 2
 SAW_SPEED = 3
+CONVEYOR_SPEED = 2
 MOVING_SPEED = 6
 FALL_SPEED = 6
 MAX_HEALTH = 3
@@ -43,6 +44,7 @@ HERO_WIDTH, HERO_HEIGHT = 32, 32  # Hero Dimensions
 HERO_SPACING = (WIDTH - 6 * HERO_WIDTH) // 4  # The Spacing Between Heroes
 HUD_NUMBER_OFFSET_X, HUD_NUMBER_OFFSET_Y = 20, 80
 COLLISION_THRESHOLD = 10  # Collision Threshold
+CONVEYOR_WIDTH, CONVEYOR_HEIGHT = 49, 12  # Convetor Tile's Dimensions
 
 # Font
 LEVEL_FONT = pg.font.SysFont('comicsans', 50)
@@ -53,10 +55,12 @@ WIN_FONT = pg.font.SysFont('comicsans', 25)
 # Game Events
 TERRAIN_SPAWN = pg.USEREVENT + 1
 HERO_DIE = pg.USEREVENT + 2
+EMPTY_TILE_DESTROY = pg.USEREVENT + 3
 
 # Spawn Frequence and Delay Time
 TERRAIN_SPAWN_FREQ = 1000
 DELAY_TIME = 3000
+EMPTY_TILE_TRIGGER_TIME = 1000
 
 # Image Path
 BACKGROUND = 'assets/background/Gray.png'
@@ -91,9 +95,12 @@ HERO_HIT = {
 TERRAIN = {
     'common_tile': 'assets/terrain/common_tile.png',
     'spike_tile': 'assets/terrain/spike_tile.png',
-    'heal_tile': 'assets/terrain/heal_tile1.png',
+    'heal_tile': 'assets/terrain/heal_tile.png',
+    'empty_tile': 'assets/terrain/empty_tile.png',
+    'conveyor_tile_left': 'assets/terrain/conveyor_tile.png',
+    'conveyor_tile_right': 'assets/terrain/conveyor_tile.png'
 }
-TERRAIN_SPAWN_WEIGHTS = [50, 20, 30]
+TERRAIN_SPAWN_WEIGHTS = [40, 20, 10, 10, 10, 10]
 
 # Sound Path
 HEAL_SOUND = 'assets/sound/heal.wav'
@@ -101,4 +108,5 @@ STING_SOUND = 'assets/sound/sting.ogg'
 MASKDUDE_SOUND = 'assets/sound/maskdude.ogg'
 NINJAFROG_SOUND = 'assets/sound/ninjafrog.ogg'
 PINKMAN_SOUND = 'assets/sound/pinkman.ogg'
+BREAK_SOUND = 'assets/sound/break.flac'
 BGM = 'assets/sound/Juhani Junkala.wav'

@@ -7,10 +7,13 @@ pg.init()
 
 
 def flip(images):
+    """Flips a list of images horizontally."""
     return [pg.transform.flip(image, True, False) for image in images]
 
 
-def load_image_sheets(img_path, width, height, needScale=False):
+def load_image_sheets(img_path, width, height, needScale=False, customScale=False, size=None):
+    """Splits an image into multiple sub-images (sprites) based on the given width and height, 
+    and optionally scales them."""
     image = pg.image.load(img_path).convert_alpha()
     image_num = image.get_width() // width
 
@@ -21,17 +24,26 @@ def load_image_sheets(img_path, width, height, needScale=False):
         surface.blit(image, (0, 0), rect)
         if needScale:
             surface = pg.transform.scale2x(surface)
+        elif customScale:
+            surface = pg.transform.scale(surface, size)
         images.append(surface)
     return images
 
 
 def render_font(text, font, color, center):
+    """Renders a given text using the specified font and color."""
     rendered_text = font.render(text, True, color)
     rendered_text_rect = rendered_text.get_rect(center=center)
     return rendered_text, rendered_text_rect
 
 
 class Hero(pg.sprite.Sprite):
+    """A class representing the Hero. 
+    It represents a game character with various attributes, 
+    such as health and direction, and actions, such as running, 
+    falling, and dying, as well as handling animations for different 
+    states like idle, running, and falling."""
+
     def __init__(self, heroType):
         super().__init__()
         self.animation_count = 0
@@ -142,30 +154,56 @@ class Hero(pg.sprite.Sprite):
 
 
 class Terrain(pg.sprite.Sprite):
+    """A class representing the Terrain.
+    Its main functions include initializing the terrain object 
+    with its properties, updating its position and animation, 
+    and destroying the object when it goes out of bounds."""
+
     def __init__(self, terrainType, pos):
         super().__init__()
         self.type = terrainType
-        self.has_dealt_damage = False  # store if the terrain has dealt damage
-        self.has_dealt_heal = False  # store if the terrain has dealt heal
+        self.has_dealt_damage = False
+        self.has_dealt_heal = False
+        self.has_trigger = False
+        self.animation_count = 0
 
         # Load Terrain Image
-        self.image = pg.transform.scale(pg.image.load(
-            TERRAIN[self.type]).convert(), (TERRAIN_WIDTH, TERRAIN_HEIGHT))
+        if self.type in ['conveyor_tile_right', 'conveyor_tile_left']:
+            self.conveyor_img = load_image_sheets(
+                TERRAIN[self.type], CONVEYOR_WIDTH, CONVEYOR_HEIGHT,
+                customScale=True, size=(TERRAIN_WIDTH, TERRAIN_HEIGHT))
+            if self.type == 'conveyor_tile_left':
+                self.conveyor_img = flip(self.conveyor_img)
+            self.image = self.conveyor_img[self.animation_count]
+        else:
+            self.image = pg.transform.scale(pg.image.load(
+                TERRAIN[self.type]).convert(), (TERRAIN_WIDTH, TERRAIN_HEIGHT))
         self.rect = self.image.get_rect(midtop=pos)
 
     def terrain_move(self):
         self.rect.y -= TERRAIN_SPEED
+
+        if self.type in ('conveyor_tile_right', 'conveyor_tile_left'):
+            if self.animation_count >= len(self.conveyor_img):
+                self.animation_count = 0
+            self.image = self.conveyor_img[int(self.animation_count)]
 
     def destroy(self):
         if self.rect.y <= -TERRAIN_HEIGHT:
             self.kill()
 
     def update(self):
+        self.animation_count += 0.2
         self.terrain_move()
         self.destroy()
 
 
 class Game:
+    """Main game class for Leap of Faith.
+    It is responsible for handling game mechanics, including initialization, 
+    loading resources, updating game states, handling events, and rendering graphics. 
+    The main loop of the game continuously executes, updating game states 
+    and drawing elements on the screen."""
 
     def __init__(self):
         self.setup()
@@ -181,6 +219,7 @@ class Game:
         self.level = TOP_LEVEL
         self.fall_dist = 0
         self.hero_prevPos = HERO_Y
+        self.triggered_empty_tiles = []
         self.screen = pg.display.set_mode((WIDTH, HEIGHT))
         pg.display.set_caption('Leap of Faith: The 100-Floor Trials')
         pg.time.set_timer(TERRAIN_SPAWN, TERRAIN_SPAWN_FREQ)
@@ -222,8 +261,10 @@ class Game:
     def load_sounds(self):
         pg.mixer.music.load(BGM)
         pg.mixer.music.play(loops=-1)
+        pg.mixer.music.set_volume(0.3)
         self.heal_sound = pg.mixer.Sound(HEAL_SOUND)
         self.sting_sound = pg.mixer.Sound(STING_SOUND)
+        self.break_sound = pg.mixer.Sound(BREAK_SOUND)
         self.maskdude_sound = pg.mixer.Sound(MASKDUDE_SOUND)
         self.ninjafrog_sound = pg.mixer.Sound(NINJAFROG_SOUND)
         self.pinkman_sound = pg.mixer.Sound(PINKMAN_SOUND)
@@ -260,6 +301,12 @@ class Game:
                     terrains.add(
                         Terrain(terrain_type, (randint(
                             TERRAIN_SPAWNLEFT, TERRAIN_SPAWNRIGHT), HEIGHT)))
+
+                if event.type == EMPTY_TILE_DESTROY:
+                    for terrain in terrains:
+                        if terrain.type == 'empty_tile' and terrain.has_trigger:
+                            terrain.kill()
+                    pg.time.set_timer(EMPTY_TILE_DESTROY, 0)
             else:
                 if event.type == pg.KEYDOWN:
                     hero_type = None
@@ -381,6 +428,14 @@ class Game:
             self.fall_dist += dist
         self.hero_prevPos = hero.sprite.rect.bottom
 
+    def empty_tile_destroy(self):
+        current_time = pg.time.get_ticks()
+        for terrain, trigger_time in self.triggered_empty_tiles:
+            if current_time - trigger_time >= EMPTY_TILE_TRIGGER_TIME:
+                self.break_sound.play()
+                self.triggered_empty_tiles.remove((terrain, trigger_time))
+                terrain.kill()
+
     def collision(self, terrains):
         for terrain in terrains:
             if pg.sprite.collide_mask(hero.sprite, terrain):
@@ -396,6 +451,15 @@ class Game:
                     elif terrain.type == 'heal_tile' and not terrain.has_dealt_heal:
                         self.cal_heal()
                         terrain.has_dealt_heal = True
+                    elif terrain.type == 'empty_tile' and not terrain.has_trigger:
+                        self.triggered_empty_tiles.append(
+                            (terrain, pg.time.get_ticks()))
+                        terrain.has_trigger = True
+                    elif terrain.type == 'conveyor_tile_left':
+                        hero.sprite.rect.x -= CONVEYOR_SPEED
+                    elif terrain.type == 'conveyor_tile_right':
+                        hero.sprite.rect.x += CONVEYOR_SPEED
+
                 # Check if hero hits the sides of the terrain
                 else:
                     if hero.sprite.rect.left < terrain.rect.left:
@@ -432,6 +496,7 @@ class Game:
                 if hero.sprite.cutscene_played:
                     self.collision(terrains)
                     self.cal_fallDist()
+                    self.empty_tile_destroy()
 
                 # Display HUD
                 self.display_level()
