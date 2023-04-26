@@ -35,7 +35,7 @@ Troubleshooting:
 5. The game ends when you reach Level 0 or lose all your health. Challenge yourself to beat your best score and achieve mastery over the trials!
 
 ## Game Screen Demos
-![demo1](https://user-images.githubusercontent.com/125934684/234430244-e3654987-185e-45c7-a447-9da27922bba5.png)
+<p align="center">![demo1](https://user-images.githubusercontent.com/125934684/234430244-e3654987-185e-45c7-a447-9da27922bba5.png)</p>
 ![demo2](https://user-images.githubusercontent.com/125934684/234430256-8797992a-edbe-4894-b120-94ff3fd14dd9.png)
 ![demo3](https://user-images.githubusercontent.com/125934684/234440599-5edbdd0a-6e06-4300-9cb2-0f013eb9d688.png)
 ![demo4](https://user-images.githubusercontent.com/125934684/234440607-c6b92573-9155-4b93-9039-3163c328dab5.png)
