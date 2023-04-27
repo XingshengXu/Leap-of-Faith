@@ -483,7 +483,7 @@ class Game:
             self.handle_events()
 
             if self.game_active:
-                # Display Pregame Background
+                # Display Game Background
                 self.draw_background()
                 # Draw Sprites
                 terrains.draw(self.screen)
