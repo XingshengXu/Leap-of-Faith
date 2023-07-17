@@ -15,7 +15,7 @@ Before installing "Leap of Faith", ensure that you have Python 3.7 or higher ins
 
 Step 1: Install required libraries To run the game, you need to install the pygame library. Open a terminal or command prompt and enter the following command: pip install pygame
 
-Step 2: Download the game files Download the game files, including the game code, assets (images, sounds, etc.), and settings from the provided link or repository. Ensure that you have all the necessary files in the same folder.
+Step 2: Download the game files, including the game code, assets (images, sounds, etc.), and settings from the provided link or repository. Ensure that you have all the necessary files in the same folder.
 
 Step 3: Run the game Navigate to the folder containing the game files using the terminal or command prompt. Once there, execute the following command: python ATripHome.py
 
@@ -23,7 +23,7 @@ Step 4: Enjoy the game The game should now start, and you can enjoy playing "Lea
 
 Troubleshooting:
 
-1. If you encounter any issues while installing the libraries or running the game, make sure you have the latest version of Python and the required libraries installed. You can use the the .venv folder provided for game necessary libraries.
+1. If you encounter any issues while installing the libraries or running the game, make sure you have the latest version of Python and the required libraries installed, i.e., pygame module.
 2. Ensure that all game files, including assets and settings, are in the same folder as the main Python script.
 3. If you still experience issues, consult the game's documentation, forums, or contact the developer for assistance.
 
