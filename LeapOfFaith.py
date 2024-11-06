@@ -302,11 +302,6 @@ class Game:
                         Terrain(terrain_type, (randint(
                             TERRAIN_SPAWNLEFT, TERRAIN_SPAWNRIGHT), HEIGHT)))
 
-                if event.type == EMPTY_TILE_DESTROY:
-                    for terrain in terrains:
-                        if terrain.type == 'empty_tile' and terrain.has_trigger:
-                            terrain.kill()
-                    pg.time.set_timer(EMPTY_TILE_DESTROY, 0)
             else:
                 if event.type == pg.KEYDOWN:
                     hero_type = None

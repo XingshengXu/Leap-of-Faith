@@ -55,7 +55,6 @@ WIN_FONT = pg.font.SysFont('comicsans', 25)
 # Game Events
 TERRAIN_SPAWN = pg.USEREVENT + 1
 HERO_DIE = pg.USEREVENT + 2
-EMPTY_TILE_DESTROY = pg.USEREVENT + 3
 
 # Spawn Frequence and Delay Time
 TERRAIN_SPAWN_FREQ = 1000
